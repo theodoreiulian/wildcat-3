@@ -6,7 +6,30 @@ The default mode is paper trading against real public Kraken data. Live trading 
 
 ## Install and start
 
-Python 3.11+ on macOS or Linux (the process lock uses `fcntl`). Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
+### Browser setup (recommended)
+
+On your Mac, double-click **Open WildCat-3.command** in the project folder. It installs the locked dependencies with `uv` and opens the local control panel in your browser. Keep the launcher's Terminal window open. If `uv` is missing, install it once using the [official instructions](https://docs.astral.sh/uv/getting-started/installation/).
+
+1. Start **Paper trading** immediately, with a simulated €200 and no keys.
+2. For Kraken, expand **Where do I get my API keys?**, create a Spot API key on Kraken, and paste the API key and private key into the form. Your Kraken password is never needed here.
+3. Click **Save Kraken keys**, then **Check account**. The check authenticates and reconciles the dedicated account without placing or validating an order; success does not establish trading permissions, live execution safety or profitability.
+4. Optionally enter a Telegram bot token, use **Find my chat** after messaging your bot, select your chat, and save. All credentials are entered in the browser.
+5. Select **Live**, explicitly confirm real-money trading, then click **Start live trading**. This requires a successful account check within the past 15 minutes and still applies every existing engine safeguard.
+
+The panel shows saved account snapshots, positions, orders, decisions and events. **Stop bot safely** requests graceful reconciliation and entry cancellation while retaining native protective exits. Closing the browser tab does not stop the bot. Double-click the launcher again to reopen the existing panel. No process starts trading just because the panel opens.
+
+The panel only listens on `127.0.0.1`, requires a per-launch session token for its API, and rejects cross-origin writes. Credentials are saved in the gitignored `.env` file with owner-only permissions (`0600`), in **plaintext**, and never returned to the browser. They are accessible to programs running as your Mac user; this is not encrypted credential storage. Do not expose this panel through a tunnel or reverse proxy. The launcher URL is a local session credential—do not share it.
+
+### Terminal alternative
+
+Python 3.11+ on macOS or Linux (the process lock uses `fcntl`). With `uv` installed:
+
+```sh
+uv sync --frozen --no-editable --reinstall-package wildcat3
+uv run --no-sync wildcat3 web
+```
+
+`web` opens the same browser panel; `--no-browser` prints its session URL and `--port 8766` selects a different local port. No `.env` editing is needed. The launcher uses a regular package installation to avoid macOS/Python ignoring hidden editable-install path files; `--no-sync` preserves that installation. For the original terminal dashboard and developer tools:
 
 ```sh
 uv sync --extra dev
@@ -39,7 +62,7 @@ Current verified starter-tier fees are **0.40% maker and 0.80% taker**, effectiv
 
 1. Use a **dedicated Kraken account/balance** with exactly **€200 EUR**, no other assets, open orders, margin positions, Earn holdings or external trading bots. Disable automatic Earn transfers. The runner rejects unexplained cash/asset movements and never treats your wider holdings as its bankroll. Do not run another instance with the same account/API key, including on another computer.
 2. Create a Kraken API key with balance/funds queries, open and closed order/trade queries, create/modify orders and cancel orders permissions. **Do not grant withdrawals, deposits or transfers.** Use IP restrictions where practical. Store the key only in your local `.env`; never commit it. `TradeVolume` requires query funds permission.
-3. Set `KRAKEN_API_KEY`, `KRAKEN_API_SECRET` and `WILDCAT_LIVE_ENABLED=true` in `.env`. Explicitly use `--live` when launching. A paper process never uses the private key.
+3. Enter `KRAKEN_API_KEY` and `KRAKEN_API_SECRET` in the browser setup form. Its **Live** start button enables real trading only for the explicitly launched process. For terminal-only use, set `WILDCAT_LIVE_ENABLED=true` in `.env` and pass `--live`. Saving settings in the browser resets that file flag to false; the browser still supports an explicit live launch. A paper process never uses the private key.
 4. Set up Telegram as below, and enable Kraken's own execution notifications for periods when this computer is off.
 5. Review [Kraken-specific unresolved acceptance tests](docs/KRAKEN_RESEARCH.md) and [operations](docs/OPERATIONS.md), including tiny partial fills, inherited fee currency, child expiry and trailing-order limits. Validate actual behavior using the minimum practical live size before trusting unattended operation. A REST `validate=true` response does not prove child creation or fills.
 

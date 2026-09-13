@@ -86,10 +86,16 @@ async def runner(args, config):
         loop.add_signal_handler(sig, stop.set)
     notify_task = None
     try:
-        if args.command == "preflight":
+        if args.command in {"preflight", "check-account"}:
             await engine.bootstrap()
             if store.get("halt"):
                 raise SafetyError(store.get("halt"))
+            if args.command == "check-account":
+                engine.view.update(status="ACCOUNT CHECKED", updated=time.time(), equity=None, unrealized=None,
+                                   health="Account reconciled. Start the bot for current market valuations.")
+                store.set("dashboard", engine.view)
+                print("Account authenticated and reconciled. No order submitted; trading permissions and fills are not validated.")
+                return
             if engine.account.positions or engine.open:
                 raise SafetyError("Preflight sample validation requires no exposure or open orders")
             validated = False
@@ -159,8 +165,11 @@ def main():
     load_dotenv(override=False)
     parser = argparse.ArgumentParser(description="WildCat-3 · decentralized AI · Kraken EUR Spot")
     subs = parser.add_subparsers(dest="command", required=True)
+    web = subs.add_parser("web", help="Open the local browser setup and control panel")
+    web.add_argument("--port", type=int, default=8765)
+    web.add_argument("--no-browser", action="store_true")
     subs.add_parser("doctor", help="Public API and eligibility check; no private calls")
-    for command in ("run", "preflight", "status", "export", "resume", "resolve-unknown"):
+    for command in ("run", "preflight", "check-account", "status", "export", "resume", "resolve-unknown"):
         p = subs.add_parser(command)
         p.add_argument("--live", action="store_true", help="Use real-money mode/database")
         p.add_argument("--db", help="Explicit SQLite database path; never share one between modes")
@@ -176,6 +185,10 @@ def main():
             p.add_argument("--reason", required=True, help="Audit note/source for the verification")
     args = parser.parse_args()
     try:
+        if args.command == "web":
+            from .web import serve
+            serve(Path.cwd(), args.port, not args.no_browser)
+            return
         if args.command == "doctor":
             asyncio.run(doctor())
             return

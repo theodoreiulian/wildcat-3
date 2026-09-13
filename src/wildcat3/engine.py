@@ -54,10 +54,9 @@ class Engine:
         if old_mode is not None and old_mode != self.config.mode:
             raise SafetyError("Cannot share a database between paper and live modes")
         fingerprint = hashlib.sha256(self.config.api_key.encode()).hexdigest() if self.config.mode == "live" else "paper"
-        if self.store.get("account_key", fingerprint) != fingerprint:
+        if self.store.get("inception") is not None and self.store.get("account_key", fingerprint) != fingerprint:
             raise SafetyError("Database belongs to a different API key/account; restore its original key")
         self.store.set("mode", self.config.mode)
-        self.store.set("account_key", fingerprint)
         self.markets = await self.exchange.markets()
         self.market_refresh = time.time()
         if "BTC/EUR" not in self.markets:
@@ -75,9 +74,12 @@ class Engine:
             if self.config.mode == "live":
                 if await self.exchange.private("OpenPositions"):
                     raise SafetyError("Initial account has margin positions; a clean spot-only account is required")
-            self.store.set("inception", time.time())
-            self.store.set("high_water", "200")
-            self.store.add_equity(D("200"))
+            # Failed setup/authentication must not bind a new ledger to a mistyped key.
+            with self.store.transaction():
+                self.store.set("account_key", fingerprint)
+                self.store.set("inception", time.time())
+                self.store.set("high_water", "200")
+                self.store.add_equity(D("200"))
         await self.refresh_fees()
         await self.reconcile()
         self.initialized = True

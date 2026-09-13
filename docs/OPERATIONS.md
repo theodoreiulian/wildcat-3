@@ -1,5 +1,19 @@
 # Operating WildCat-3
 
+## Browser setup and daily operation
+
+Double-click `Open WildCat-3.command` on macOS, or after the README's browser installation run `uv run --no-sync wildcat3 web`. The launcher prepares dependencies and opens a loopback-only control panel. It uses a regular package installation (`--no-editable`) because macOS can mark editable-install path files hidden, which Python ignores; it reinstalls the local package at a fresh launch to pick up source updates. It does not enable or start trading automatically. An additional launcher invocation reopens the existing panel without reinstalling the running package or spawning a second controller.
+
+Use the Kraken form to save API credentials, then **Check account** to authenticate and reconcile. This invokes `check-account --live`, which executes the existing bootstrap/reconciliation path but never submits an order, including a validate-only order. It can check an already initialized account with owned positions and working stops, unlike the flat-account sample-order preflight below. A successful check is valid for a browser live start for 15 minutes; changing settings or stopping invalidates it. Start still performs a fresh engine reconciliation. Order permissions and real protective-child behavior are not certified by this check.
+
+Paper and live use their existing `data/paper.sqlite3` and `data/live.sqlite3` ledgers. Read-only dashboard snapshots are labeled by mode and age. The controller permits one operation at a time and refuses configuration changes while either default ledger is owned by a terminal runner. Custom database paths and other machines still require exclusive account use.
+
+Browser credentials are written atomically into `.env` with `0600` permissions, preserving unrelated settings. They are plaintext on disk, excluded from Git, never put in command arguments, and never returned in dashboard/settings responses. Secrets are injected into the child process environment. Saving settings sets `WILDCAT_LIVE_ENABLED=false` in the file; only an explicit, confirmed browser live start enables it in the child environment. Terminal-only live users must opt in again after saving browser settings.
+
+The local HTTP API requires a randomly generated session token, validates the Host header, requires same-origin JSON writes and sends no-store/CSP headers. The token is passed in the launch URL fragment, then held in tab session storage; it is not a Kraken credential. `data/web-session.json` (owner-only and gitignored) lets the launcher reopen the panel. Do not publish the launch URL, forward the local port or share this operating-system account with untrusted software.
+
+Use **Stop bot safely** before closing the launcher's Terminal window. Browser-tab closure leaves the runner active. Ctrl-C/SIGTERM on the server requests the same graceful child shutdown, waits for it, and never force-kills an in-flight trading call. Protective stops are not canceled. Telegram chat discovery reads recent private messages from the configured bot without sending messages or consuming its update offset; save the selected numeric chat ID before starting notifications.
+
 ## Start with a public-data dry run
 
 Run commands from the repository root; paths and `.env` are relative to the project. Python 3.11 or newer is required. `uv sync --frozen --extra dev` installs exact dependency versions from `uv.lock`. Copy `.env.example` to `.env`, set permissions with `chmod 600 .env`, and leave `WILDCAT_LIVE_ENABLED=false` initially.

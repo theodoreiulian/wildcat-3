@@ -63,6 +63,34 @@ async def filled_position(fixture, qty=D(".1")):
     return next(k for k, o in exchange.state["orders"].items() if o["descr"]["type"] == "sell")
 
 
+async def test_failed_setup_does_not_bind_mistyped_key(tmp_path):
+    store = Store(tmp_path / "live.sqlite3")
+    public = Public()
+    exchange = PaperExchange(public, store)
+
+    async def failed_auth():
+        raise KrakenError("Invalid key")
+
+    exchange.balance_ex = failed_auth
+    try:
+        for key in ("mistyped-key", "corrected-key"):
+            engine = Engine(Config(mode="live", db_path=store.path, api_key=key, api_secret="secret"), store, exchange)
+            with pytest.raises(KrakenError, match="Invalid key"):
+                await engine.bootstrap()
+        assert store.get("inception") is None
+        assert store.get("account_key") is None
+    finally:
+        store.close()
+
+
+async def test_initialized_ledger_still_rejects_different_key(fixture):
+    store, _, exchange, _ = fixture
+    store.set("mode", "live")
+    engine = Engine(Config(mode="live", db_path=store.path, api_key="different", api_secret="secret"), store, exchange)
+    with pytest.raises(SafetyError, match="different API key"):
+        await engine.bootstrap()
+
+
 async def test_actual_ambiguous_subclass_stays_uncertain(fixture):
     store, _, exchange, engine = fixture
     async def ambiguous(*args, **kwargs):
