@@ -63,11 +63,10 @@ async function api(path, body) {
 function controls() {
   const locked = pending || disconnected || !!current?.busy;
   document.querySelectorAll("form input, form button").forEach(el => { el.disabled = locked; });
-  $("mode").disabled = locked; $("confirm-live").disabled = locked;
+  $("mode").disabled = locked;
   const live = $("mode").value === "live";
-  $("live-confirmation").hidden = !live;
   $("start").textContent = live ? "Start live" : "Start paper";
-  $("start").disabled = locked || (live && (!current?.live_ready || !$("confirm-live").checked));
+  $("start").disabled = locked || (live && !current?.live_ready);
   $("check-account").disabled = locked || !current?.configured.KRAKEN_API_KEY;
   $("remove-kraken").disabled = locked || !current?.configured.KRAKEN_API_KEY;
   $("remove-telegram").disabled = locked || !current?.configured.TELEGRAM_BOT_TOKEN;
@@ -209,7 +208,7 @@ $("kraken-form").addEventListener("submit", async event => {
   event.preventDefault(); const key = $("api-key").value.trim(), secret = $("api-secret").value.trim();
   if (!key || !secret) return notice("Enter both Kraken keys.", true);
   await act("/api/settings", {KRAKEN_API_KEY:key, KRAKEN_API_SECRET:secret}, "Kraken keys saved. Check the account before live mode.");
-  $("api-key").value = ""; $("api-secret").value = ""; $("confirm-live").checked = false; controls();
+  $("api-key").value = ""; $("api-secret").value = ""; controls();
 });
 $("telegram-form").addEventListener("submit", async event => {
   event.preventDefault(); const bot = $("telegram-token").value.trim(), chat = $("telegram-chat").value.trim();
@@ -231,10 +230,9 @@ $("find-chat").onclick = async () => {
 $("chat-choice").onchange = () => { $("telegram-chat").value = $("chat-choice").value; };
 $("check-account").onclick = () => act("/api/start", {action:"check"}, "Checking the dedicated account. No orders will be placed.");
 $("doctor").onclick = () => act("/api/start", {action:"doctor"}, "Testing Kraken public market access.");
-$("start").onclick = () => act("/api/start", {action:"run", mode:$("mode").value, confirmed:$("confirm-live").checked}, "Engine start requested.");
+$("start").onclick = () => act("/api/start", {action:"run", mode:$("mode").value, confirmed:true}, "Engine start requested.");
 $("stop").onclick = () => act("/api/stop", {}, "Safe stop requested.");
-$("mode").onchange = () => { $("confirm-live").checked = false; controls(); };
-$("confirm-live").onchange = controls;
+$("mode").onchange = controls;
 
 $("view-portfolio").onclick = () => workspaceView("portfolio");
 $("view-activity").onclick = () => workspaceView("activity");
@@ -249,20 +247,14 @@ $("settings-button").onclick = () => settings($("settings-panel").hidden);
 $("settings-close").onclick = () => settings(false);
 document.addEventListener("keydown", event => { if (event.key === "Escape" && !$("settings-panel").hidden) settings(false); });
 
-// Only the standalone window owns its chrome, so only it offers full screen.
+// Only the standalone window owns its chrome. Full screen is driven from the menu
+// and F11; the top bar only tracks it so the macOS traffic lights stay clear.
 function windowChrome() {
   if (!desktop) return;
   const platform = String(desktop.platform).replace(/[^a-z0-9]/g, "");
   document.body.classList.add("desktop");
   if (platform) document.body.classList.add(`platform-${platform}`);
-  const button = $("fullscreen-button");
-  button.hidden = false;
-  button.onclick = () => desktop.toggleFullScreen();
-  desktop.onFullScreenChange(on => {
-    document.body.classList.toggle("fullscreen", on);
-    button.setAttribute("aria-pressed", String(on));
-    button.setAttribute("aria-label", on ? "Exit full screen" : "Enter full screen");
-  });
+  desktop.onFullScreenChange(on => document.body.classList.toggle("fullscreen", on));
 }
 
 function tick() { $("clock-time").textContent = `${new Date().toISOString().slice(11, 19)} UTC`; }

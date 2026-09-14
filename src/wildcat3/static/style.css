@@ -16,9 +16,10 @@ button,input,select{font:inherit}
 button,input,select,summary,a{outline-offset:3px}
 :focus-visible{outline:1px solid var(--green)}
 
-.topbar{grid-row:1;height:38px;display:flex;align-items:center;padding:0 clamp(12px,2vw,24px);border-bottom:1px solid #293033;background:#050606;position:sticky;top:0;z-index:30}
-.brand{align-self:stretch;display:flex;align-items:center;gap:6px;padding:0 10px;background:var(--green);color:#020604;font-size:11px;font-weight:800;letter-spacing:.08em;text-decoration:none}
-.brand:hover{color:#090704}.brand b{font-size:11px}
+.topbar{grid-row:1;height:46px;display:flex;align-items:center;padding:0 clamp(12px,2vw,24px);border-bottom:1px solid #293033;background:#050606;position:sticky;top:0;z-index:30}
+.brand{align-self:stretch;display:flex;align-items:center;padding:0 14px;background:var(--green);text-decoration:none}
+.brand img{height:26px;width:auto;display:block}
+.brand:hover{background:#3ddc8a}
 .workspace-tabs{align-self:stretch;display:flex;margin-left:8px}
 .workspace-tabs button{position:relative;min-height:0;padding:0 12px;border:0;color:var(--soft);font-size:9px;letter-spacing:.12em}
 .workspace-tabs button::after{content:"";position:absolute;right:12px;bottom:0;left:12px;height:1px;background:transparent}
@@ -30,11 +31,9 @@ button,input,select,summary,a{outline-offset:3px}
 .connection.live{color:var(--green)}.connection.live::before{background:var(--green)}
 .connection.bad{color:var(--red)}.connection.bad::before{background:var(--red)}
 #clock-time{margin-left:20px;color:var(--muted);font-size:10px}
-.chrome-button{display:grid;place-items:center;width:38px;height:38px;min-height:0;margin-left:14px;padding:0;border:0;border-left:1px solid var(--line);color:var(--muted)}
+.chrome-button{display:grid;place-items:center;width:46px;height:46px;min-height:0;margin-left:14px;padding:0;border:0;color:var(--muted)}
 .chrome-button svg{grid-area:1/1;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
-.chrome-button:hover:not(:disabled),.settings-button[aria-expanded="true"]{color:var(--green);border-color:var(--line);background:var(--raised)}
-#fullscreen-button .exit-icon,body.fullscreen #fullscreen-button .enter-icon{display:none}
-body.fullscreen #fullscreen-button .exit-icon{display:block}
+.chrome-button:hover:not(:disabled),.settings-button[aria-expanded="true"]{color:var(--green);background:var(--raised)}
 /* Standalone window: the top bar is the title bar, so it drags and clears the macOS
    window buttons. Full screen reclaims that space. */
 body.desktop{-webkit-user-select:none;user-select:none}
@@ -59,8 +58,6 @@ main{grid-row:3;width:100%;min-height:0;display:grid;grid-template-columns:minma
 .engine-state i{width:6px;height:6px;background:currentColor;flex:none}
 .engine-state.up{color:var(--green)!important}.engine-state.down{color:var(--red)!important}.engine-state.idle{color:var(--yellow)!important}
 .engine-panel .text-button{white-space:nowrap}
-.live-confirmation{display:flex;align-items:center;gap:14px;margin-top:7px;padding:7px 0 0 43px;border-top:1px solid var(--line)}
-.live-confirmation .caution,.live-confirmation .check{margin:0}
 .portfolio-head{display:flex;justify-content:space-between;align-items:flex-end;gap:28px;padding:18px var(--workspace-pad) 14px;border-bottom:1px solid var(--line)}
 .kicker{margin:0 0 6px;color:var(--muted);font:9px var(--mono);letter-spacing:.14em}
 .kicker span:first-child{color:var(--green)}
@@ -114,9 +111,6 @@ input:focus,select:focus{border-color:var(--green);outline:none}
 input::placeholder{color:var(--soft)}
 input:disabled,select:disabled{opacity:.45}
 .hint{margin:7px 0 0;color:var(--soft);font-size:10px}
-.caution{margin:14px 0 0;color:var(--red);font-size:10px}
-.check{display:flex;align-items:flex-start;gap:8px;color:var(--muted);font-size:10px;line-height:1.4;letter-spacing:0}
-.check input{width:14px;height:14px;min-height:0;margin:1px 0 0;accent-color:var(--green);flex:none}
 .actions{display:flex;gap:7px;margin-top:16px;flex-wrap:wrap}
 button{min-height:31px;padding:6px 10px;border:1px solid var(--line);border-radius:0;background:transparent;color:var(--muted);cursor:pointer;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
 button:hover:not(:disabled){color:var(--text);border-color:var(--soft)}
@@ -149,7 +143,7 @@ button.primary:hover:not(:disabled){background:#5de092;border-color:#5de092;colo
 .events li.none{display:block;padding:7px var(--workspace-pad);color:var(--soft)}
 .events time,.events span{color:var(--soft)}
 pre{margin:0;padding:10px;height:100%;overflow:auto;background:var(--surface);border:1px solid var(--line);color:var(--muted);font:10px/1.5 var(--mono);white-space:pre-wrap;overflow-wrap:anywhere}
-.settings-panel{position:fixed;z-index:29;top:38px;right:0;width:min(720px,calc(100vw - 16px));max-height:calc(100vh - 46px);overflow:auto;background:#050707;border-left:1px solid #343a3d;border-bottom:1px solid #343a3d;box-shadow:-12px 18px 32px rgba(0,0,0,.55)}
+.settings-panel{position:fixed;z-index:29;top:46px;right:0;width:min(720px,calc(100vw - 16px));max-height:calc(100vh - 46px);overflow:auto;background:#050707;border-left:1px solid #343a3d;border-bottom:1px solid #343a3d;box-shadow:-12px 18px 32px rgba(0,0,0,.55)}
 .settings-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#202426;border-bottom:1px solid #343a3d}
 .settings-head>div{display:flex;align-items:baseline;gap:14px}.settings-head h2{margin:0;color:var(--text);font-size:10px;letter-spacing:.12em}.settings-head span{color:var(--muted);font-size:9px}
 .settings-head button{min-height:24px;padding:3px 6px;border:0;color:var(--muted)}
@@ -163,7 +157,7 @@ pre{margin:0;padding:10px;height:100%;overflow:auto;background:var(--surface);bo
   .protection-panel{margin-top:24px;padding-top:18px}.activity-screen{min-height:520px}.log-panel pre{height:300px}
 }
 @media(max-width:720px){
-  main{padding-top:18px}.engine-row{align-items:flex-start}.engine-mode{grid-template-columns:auto minmax(0,1fr);width:100%}.engine-state{order:4;flex-basis:100%}.engine-panel .engine-meta{order:5;width:100%;padding:8px 0 0;border-left:0;border-top:1px solid var(--line);justify-content:space-between}.live-confirmation{align-items:flex-start;flex-direction:column;padding-left:0}.portfolio-head{align-items:flex-start;flex-direction:column}.headline-stats{width:100%;justify-content:space-between}.settings-grid{grid-template-columns:1fr}
+  main{padding-top:18px}.engine-row{align-items:flex-start}.engine-mode{grid-template-columns:auto minmax(0,1fr);width:100%}.engine-state{order:4;flex-basis:100%}.engine-panel .engine-meta{order:5;width:100%;padding:8px 0 0;border-left:0;border-top:1px solid var(--line);justify-content:space-between}.portfolio-head{align-items:flex-start;flex-direction:column}.headline-stats{width:100%;justify-content:space-between}.settings-grid{grid-template-columns:1fr}
   .chart-wrap{height:260px}.table-wrap{overflow:auto}.table-wrap table{min-width:620px}
   #clock-time{display:none}.workspace-tabs{margin-left:4px}.workspace-tabs button{padding:0 7px;font-size:8px}.workspace-tabs button::after{right:7px;left:7px}.settings-button{margin-left:6px}.events{height:100%}
 }
