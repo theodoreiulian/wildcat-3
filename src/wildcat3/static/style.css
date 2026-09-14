@@ -30,9 +30,19 @@ button,input,select,summary,a{outline-offset:3px}
 .connection.live{color:var(--green)}.connection.live::before{background:var(--green)}
 .connection.bad{color:var(--red)}.connection.bad::before{background:var(--red)}
 #clock-time{margin-left:20px;color:var(--muted);font-size:10px}
-.settings-button{display:grid;place-items:center;width:38px;height:38px;min-height:0;margin-left:14px;padding:0;border:0;border-left:1px solid var(--line);color:var(--muted)}
-.settings-button svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
-.settings-button:hover:not(:disabled),.settings-button[aria-expanded="true"]{color:var(--green);border-color:var(--line);background:var(--raised)}
+.chrome-button{display:grid;place-items:center;width:38px;height:38px;min-height:0;margin-left:14px;padding:0;border:0;border-left:1px solid var(--line);color:var(--muted)}
+.chrome-button svg{grid-area:1/1;width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.6}
+.chrome-button:hover:not(:disabled),.settings-button[aria-expanded="true"]{color:var(--green);border-color:var(--line);background:var(--raised)}
+#fullscreen-button .exit-icon,body.fullscreen #fullscreen-button .enter-icon{display:none}
+body.fullscreen #fullscreen-button .exit-icon{display:block}
+/* Standalone window: the top bar is the title bar, so it drags and clears the macOS
+   window buttons. Full screen reclaims that space. */
+body.desktop{-webkit-user-select:none;user-select:none}
+body.desktop pre,body.desktop input,body.desktop select,body.desktop table,body.desktop .events{-webkit-user-select:text;user-select:text}
+body.desktop .topbar{-webkit-app-region:drag}
+body.desktop .topbar a,body.desktop .topbar button,body.desktop .topbar select{-webkit-app-region:no-drag}
+body.desktop #settings-button{margin-left:0}
+body.desktop.platform-darwin:not(.fullscreen) .topbar{padding-left:78px}
 .feedback{grid-row:2;margin:0;padding:8px clamp(18px,3vw,44px);border-bottom:1px solid #264336;background:#111b16;color:var(--green)}
 .feedback.error{border-color:#4c2925;background:#1d1211;color:var(--red)}
 

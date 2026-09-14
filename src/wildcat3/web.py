@@ -265,6 +265,7 @@ class LocalServer(ThreadingHTTPServer):
     def __init__(self, root, port=8765):
         self.controller = Controller(root)
         self.token = secrets.token_urlsafe(32)
+        self.exiting = threading.Event()
         super().__init__(("127.0.0.1", port), Handler)
         self.origin = f"http://127.0.0.1:{self.server_port}"
 
@@ -351,40 +352,112 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(400, {"error": "Could not complete the request. Check the input and local file permissions."})
 
 
-def serve(root: Path, port=8765, open_browser=True):
+WINDOWS = ("desktop", "browser", "none")
+
+
+def electron_binary(root: Path):
+    """Locate the Electron runtime that hosts the standalone window."""
+    candidates = []
+    override = os.environ.get("WILDCAT_ELECTRON", "").strip()
+    if override:
+        candidates.append(Path(override).expanduser())
+    modules = root / "desktop" / "node_modules"
+    try:
+        # npm's electron package records its extracted runtime relative to dist/.
+        candidates.append(modules / "electron" / "dist" / (modules / "electron" / "path.txt").read_text().strip())
+    except OSError:
+        pass
+    candidates.append(modules / ".bin" / "electron")
+    for candidate in candidates:
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate
+    return None
+
+
+def open_window(root: Path, session_path: Path, detached=False):
+    """Start the desktop shell. It reads the session file itself; no secret is passed to it."""
+    binary = electron_binary(root)
+    if binary is None:
+        return None
+    env = os.environ.copy()
+    # Ignore inherited import overrides, and never hand credentials to the frontend process.
+    env.pop("PYTHONPATH", None)
+    for key in FIELDS:
+        env.pop(key, None)
+    env["WILDCAT_ROOT"] = str(root)
+    env["WILDCAT_SESSION"] = str(session_path)
+    return subprocess.Popen([str(binary), str(root / "desktop")], cwd=root, env=env,
+                            stdin=subprocess.DEVNULL, start_new_session=detached)
+
+
+def present(root: Path, session_path: Path, url: str, window: str, detached=False):
+    """Show the panel the requested way, falling back to the browser rather than not opening."""
+    if window == "desktop":
+        child = open_window(root, session_path, detached)
+        if child is not None:
+            print("Opening the WildCat-3 window…", flush=True)
+            return child
+        print("The desktop window is not installed, so the panel opens in your browser instead.\n"
+              "Install it once with: npm install --prefix desktop", flush=True)
+        window = "browser"
+    # The URL carries this launch's session token, so it is only printed when a browser needs it.
+    print(f"WildCat-3 control panel: {url}", flush=True)
+    if window == "browser":
+        webbrowser.open(url)
+    return None
+
+
+def watch_window(child, server):
+    """The window is only a frontend: closing it never stops an engine that is trading."""
+    child.wait()
+    # Ctrl-C reaches the window first; give the launcher a moment to claim the shutdown.
+    if server.exiting.wait(0.25):
+        return
+    controller = server.controller
+    with controller.lock:
+        trading = controller.busy and controller.operation == "run"
+    if trading:
+        print("Window closed. The bot keeps running here. Press Ctrl-C to stop it safely, "
+              "or open the launcher again to bring the window back.", flush=True)
+        return
+    print("Window closed. Shutting down the control panel.", flush=True)
+    server.shutdown()
+
+
+def serve(root: Path, port=8765, window="desktop"):
     root = root.resolve()
+    if window not in WINDOWS:
+        raise ControlError("Unknown window mode.")
     (root / "data").mkdir(mode=0o700, exist_ok=True)
+    session_path = root / "data/web-session.json"
     # One web controller per project; trading itself retains its existing ledger lock.
     with open(root / "data" / "web.lock", "a+") as lock:
         try:
             fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except OSError:
             try:
-                session = json.loads((root / "data/web-session.json").read_text())
+                session = json.loads(session_path.read_text())
                 origin = f"http://127.0.0.1:{int(session['port'])}"
                 with httpx.Client(timeout=3, trust_env=False) as client:
                     response = client.get(origin + "/api/state", headers={"X-Wildcat-Token": session["token"]})
                 if response.status_code != 200:
                     raise ValueError("Expired session")
-                url = origin + "/#" + session["token"]
-                if open_browser:
-                    webbrowser.open(url)
-                else:
-                    print(f"WildCat-3 is already open: {url}", flush=True)
+                print("WildCat-3 is already running in another Terminal window.", flush=True)
+                present(root, session_path, origin + "/#" + session["token"], window, detached=True)
                 return
             except (ValueError, KeyError, OSError, httpx.HTTPError):
                 raise ControlError("The control panel is already starting. Try the launcher again in a moment.") from None
         with LocalServer(root, port) as server:
             url = f"{server.origin}/#{server.token}"
-            session_path = root / "data/web-session.json"
             fd = os.open(session_path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC | os.O_NOFOLLOW, 0o600)
             with os.fdopen(fd, "w") as handle:
                 os.fchmod(handle.fileno(), 0o600)
                 json.dump({"port": server.server_port, "token": server.token}, handle)
-            print(f"WildCat-3 control panel: {url}", flush=True)
-            print("Keep this window open. Ctrl-C stops the bot safely and closes the panel.", flush=True)
-            if open_browser:
-                webbrowser.open(url)
+            print("Keep this Terminal window open. Ctrl-C stops the bot safely and closes the panel.", flush=True)
+            child = present(root, session_path, url, window)
+            if child is not None:
+                threading.Thread(target=watch_window, args=(child, server), daemon=True).start()
+
             def interrupt(*_):
                 raise KeyboardInterrupt
 
@@ -394,6 +467,9 @@ def serve(root: Path, port=8765, open_browser=True):
             except KeyboardInterrupt:
                 print("Stopping the bot safely…", flush=True)
             finally:
+                server.exiting.set()
                 signal.signal(signal.SIGTERM, previous)
+                if child is not None and child.poll() is None:
+                    child.terminate()
                 server.controller.close()
                 session_path.unlink(missing_ok=True)

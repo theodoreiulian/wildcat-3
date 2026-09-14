@@ -1,0 +1,14 @@
+{
+  "name": "wildcat3-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Standalone desktop window for the WildCat-3 control panel",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^44.3.0"
+  }
+}

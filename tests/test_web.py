@@ -9,10 +9,10 @@ import httpx
 import pytest
 from dotenv import dotenv_values
 
-from wildcat3 import cli
+from wildcat3 import cli, web
 from wildcat3.config import Config
 from wildcat3.storage import Store
-from wildcat3.web import ControlError, Controller, LocalServer
+from wildcat3.web import FIELDS, ControlError, Controller, LocalServer
 
 
 @pytest.fixture
@@ -231,3 +231,110 @@ async def test_check_account_does_not_submit_orders(tmp_path, monkeypatch):
     config = Config(mode="live", db_path=Path(tmp_path / "live.sqlite3"), api_key="key", api_secret="secret")
     await cli.runner(argparse.Namespace(command="check-account"), config)
     assert calls == ["bootstrap", "close"]
+
+
+def executable(path: Path):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("#!/bin/sh\nexit 0\n")
+    path.chmod(0o700)
+    return path
+
+
+def test_electron_binary_prefers_the_recorded_runtime(tmp_path, monkeypatch):
+    monkeypatch.delenv("WILDCAT_ELECTRON", raising=False)
+    modules = tmp_path / "desktop/node_modules"
+    assert web.electron_binary(tmp_path) is None
+    shim = executable(modules / ".bin/electron")
+    assert web.electron_binary(tmp_path) == shim
+    runtime = executable(modules / "electron/dist/Electron.app/Contents/MacOS/Electron")
+    (modules / "electron/path.txt").write_text("Electron.app/Contents/MacOS/Electron\n")
+    assert web.electron_binary(tmp_path) == runtime
+    override = executable(tmp_path / "chosen-electron")
+    monkeypatch.setenv("WILDCAT_ELECTRON", str(override))
+    assert web.electron_binary(tmp_path) == override
+    (modules / "electron/path.txt").write_text("../../../../../etc/passwd\n")
+    monkeypatch.delenv("WILDCAT_ELECTRON")
+    assert web.electron_binary(tmp_path) == shim
+
+
+def test_the_window_receives_the_session_path_and_no_credentials(controller, monkeypatch):
+    monkeypatch.setenv("WILDCAT_ELECTRON", str(executable(controller.root / "fake-electron")))
+    monkeypatch.setenv("KRAKEN_API_KEY", "example-api-key")
+    monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "example-token")
+    monkeypatch.setattr("wildcat3.web.subprocess.Popen", Process)
+    session = controller.root / "data/web-session.json"
+    child = web.open_window(controller.root, session)
+    assert child.command == [str(controller.root / "fake-electron"), str(controller.root / "desktop")]
+    assert child.kwargs["env"]["WILDCAT_SESSION"] == str(session)
+    assert child.kwargs["env"]["WILDCAT_ROOT"] == str(controller.root)
+    assert not set(FIELDS) & set(child.kwargs["env"])
+    assert "example-api-key" not in " ".join(child.command)
+
+
+def test_desktop_mode_keeps_the_session_url_off_the_terminal(controller, monkeypatch, capsys):
+    monkeypatch.setattr("wildcat3.web.subprocess.Popen", Process)
+    monkeypatch.setenv("WILDCAT_ELECTRON", str(executable(controller.root / "fake-electron")))
+    url = "http://127.0.0.1:8765/#example-session-token"
+    assert web.present(controller.root, controller.root / "data/web-session.json", url, "desktop") is not None
+    assert "example-session-token" not in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("window,opens", [("desktop", True), ("browser", True), ("none", False)])
+def test_a_missing_window_falls_back_to_the_browser(controller, monkeypatch, capsys, window, opens):
+    opened = []
+    monkeypatch.setattr("wildcat3.web.electron_binary", lambda root: None)
+    monkeypatch.setattr("wildcat3.web.webbrowser.open", opened.append)
+    url = "http://127.0.0.1:8765/#example-session-token"
+    assert web.present(controller.root, controller.root / "data/web-session.json", url, window) is None
+    assert opened == ([url] if opens else [])
+    output = capsys.readouterr().out
+    assert url in output
+    assert ("npm install --prefix desktop" in output) == (window == "desktop")
+
+
+class Window:
+    def wait(self):
+        return 0
+
+
+class Panel:
+    def __init__(self, controller):
+        self.controller = controller
+        self.exiting = threading.Event()
+        self.stopped = False
+
+    def shutdown(self):
+        self.stopped = True
+
+
+def test_closing_the_window_never_stops_a_running_bot(controller, capsys):
+    panel = Panel(controller)
+    controller.busy, controller.operation = True, "run"
+    web.watch_window(Window(), panel)
+    assert not panel.stopped
+    assert "keeps running" in capsys.readouterr().out
+    controller.busy, controller.operation = False, ""
+    web.watch_window(Window(), panel)
+    assert panel.stopped
+    panel.stopped = False
+    panel.exiting.set()
+    web.watch_window(Window(), panel)
+    assert not panel.stopped
+
+
+def test_serve_rejects_an_unknown_window_mode(tmp_path):
+    with pytest.raises(ControlError):
+        web.serve(tmp_path, 0, "popup")
+    assert not (tmp_path / "data").exists()
+
+
+@pytest.mark.parametrize("argv,window", [
+    (["web"], "desktop"), (["web", "--browser"], "browser"),
+    (["web", "--no-browser"], "none"), (["web", "--no-window"], "none"),
+])
+def test_the_web_command_selects_the_window(monkeypatch, argv, window):
+    chosen = []
+    monkeypatch.setattr("wildcat3.web.serve", lambda root, port, mode: chosen.append((port, mode)))
+    monkeypatch.setattr("sys.argv", ["wildcat3", *argv])
+    cli.main()
+    assert chosen == [(8765, window)]
