@@ -9,7 +9,7 @@ import pytest
 from wildcat3.config import Config
 from wildcat3.engine import Engine, SafetyError
 from wildcat3.exchange import AmbiguousOrderError, KrakenError
-from wildcat3.models import Book, Market, Signal
+from wildcat3.models import Book, Candle, Market, Signal
 from wildcat3.paper import PaperExchange
 from wildcat3.storage import Store
 
@@ -61,6 +61,21 @@ async def filled_position(fixture, qty=D(".1")):
     await exchange.advance({"TAO/EUR": await public.book(public.market)})
     await engine.reconcile()
     return next(k for k, o in exchange.state["orders"].items() if o["descr"]["type"] == "sell")
+
+
+async def test_held_asset_publishes_live_quote_and_bounded_price_history(fixture):
+    _, public, _, engine = fixture
+    await filled_position(fixture)
+    await engine.refresh_market_data()
+    engine.candle_cache["TAO/EUR"] = [
+        Candle(index * 3600, 190, 225, 185, 190 + index, 10) for index in range(30)
+    ]
+    engine.mark_and_breakers()
+    position = engine.view["positions"][0]
+    assert position["price"] == "199.85"
+    assert position["change_24h"] > 0
+    assert len(engine.view["price_history"]["TAO/EUR"]) == 30
+    assert engine.view["equity_history"]
 
 
 async def test_failed_setup_does_not_bind_mistyped_key(tmp_path):

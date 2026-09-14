@@ -129,8 +129,13 @@ class Store:
     def add_equity(self, value, now=None):
         self.db.execute("INSERT OR REPLACE INTO equity VALUES (?,?)", (now or time.time(), str(value)))
 
-    def equity_history(self) -> list[tuple[float, float]]:
-        return [(r[0], float(r[1])) for r in self.db.execute("SELECT time,value FROM equity ORDER BY time")]
+    def equity_history(self, limit: int | None = None) -> list[tuple[float, float]]:
+        if limit is None:
+            rows = self.db.execute("SELECT time,value FROM equity ORDER BY time")
+        else:
+            rows = reversed(list(self.db.execute(
+                "SELECT time,value FROM equity ORDER BY time DESC LIMIT ?", (max(1, int(limit)),))))
+        return [(r[0], float(r[1])) for r in rows]
 
     def transaction(self):
         from contextlib import contextmanager
