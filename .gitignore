@@ -9,5 +9,7 @@ __pycache__/
 *.egg-info/
 data/
 .context/
+.playwright-mcp/
+graphify-out/
 dist/
 .DS_Store
