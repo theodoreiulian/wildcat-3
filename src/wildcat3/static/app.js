@@ -1,7 +1,10 @@
 "use strict";
 const $ = id => document.getElementById(id);
-let token = location.hash.slice(1) || sessionStorage.getItem("wildcat-session") || "";
-if (location.hash) { sessionStorage.setItem("wildcat-session", token); history.replaceState(null, "", location.pathname); }
+// The desktop shell hands this launch's token over its preload bridge. In a browser the
+// launcher still delivers it once in the URL fragment.
+const desktop = window.wildcat || null;
+let token = desktop?.token || location.hash.slice(1) || sessionStorage.getItem("wildcat-session") || "";
+if (!desktop && location.hash) { sessionStorage.setItem("wildcat-session", token); history.replaceState(null, "", location.pathname); }
 let current = null, pending = false, disconnected = true, selected = "TOTAL";
 
 function workspaceView(view) {
@@ -246,7 +249,24 @@ $("settings-button").onclick = () => settings($("settings-panel").hidden);
 $("settings-close").onclick = () => settings(false);
 document.addEventListener("keydown", event => { if (event.key === "Escape" && !$("settings-panel").hidden) settings(false); });
 
+// Only the standalone window owns its chrome, so only it offers full screen.
+function windowChrome() {
+  if (!desktop) return;
+  const platform = String(desktop.platform).replace(/[^a-z0-9]/g, "");
+  document.body.classList.add("desktop");
+  if (platform) document.body.classList.add(`platform-${platform}`);
+  const button = $("fullscreen-button");
+  button.hidden = false;
+  button.onclick = () => desktop.toggleFullScreen();
+  desktop.onFullScreenChange(on => {
+    document.body.classList.toggle("fullscreen", on);
+    button.setAttribute("aria-pressed", String(on));
+    button.setAttribute("aria-label", on ? "Exit full screen" : "Enter full screen");
+  });
+}
+
 function tick() { $("clock-time").textContent = `${new Date().toISOString().slice(11, 19)} UTC`; }
+windowChrome();
 workspaceView(sessionStorage.getItem("wildcat-view") === "activity" ? "activity" : "portfolio");
 tick(); setInterval(tick, 1000);
 async function poll() { await refresh(); setTimeout(poll, 2500); }

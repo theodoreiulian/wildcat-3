@@ -165,9 +165,12 @@ def main():
     load_dotenv(override=False)
     parser = argparse.ArgumentParser(description="WildCat-3 · decentralized AI · Kraken EUR Spot")
     subs = parser.add_subparsers(dest="command", required=True)
-    web = subs.add_parser("web", help="Open the local browser setup and control panel")
+    web = subs.add_parser("web", help="Open the standalone WildCat-3 window and control panel")
     web.add_argument("--port", type=int, default=8765)
-    web.add_argument("--no-browser", action="store_true")
+    web.add_argument("--browser", action="store_true",
+                     help="Open the panel in your web browser instead of the desktop window")
+    web.add_argument("--no-browser", "--no-window", dest="no_window", action="store_true",
+                     help="Print the local session URL and open nothing")
     subs.add_parser("doctor", help="Public API and eligibility check; no private calls")
     for command in ("run", "preflight", "check-account", "status", "export", "resume", "resolve-unknown"):
         p = subs.add_parser(command)
@@ -187,7 +190,7 @@ def main():
     try:
         if args.command == "web":
             from .web import serve
-            serve(Path.cwd(), args.port, not args.no_browser)
+            serve(Path.cwd(), args.port, "none" if args.no_window else "browser" if args.browser else "desktop")
             return
         if args.command == "doctor":
             asyncio.run(doctor())

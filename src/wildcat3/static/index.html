@@ -14,7 +14,11 @@
   </nav>
   <span id="connection" class="connection">CONNECTING</span>
   <time id="clock-time">--:--:-- UTC</time>
-  <button id="settings-button" class="settings-button" type="button" aria-label="Open connections and alerts" aria-controls="settings-panel" aria-expanded="false">
+  <button id="fullscreen-button" class="chrome-button" type="button" hidden aria-pressed="false" aria-label="Enter full screen">
+    <svg class="enter-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5"></path><path d="M20 9V4h-5"></path><path d="M4 15v5h5"></path><path d="M20 15v5h-5"></path></svg>
+    <svg class="exit-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4"></path><path d="M15 4v5h5"></path><path d="M9 20v-5H4"></path><path d="M15 20v-5h5"></path></svg>
+  </button>
+  <button id="settings-button" class="chrome-button settings-button" type="button" aria-label="Open connections and alerts" aria-controls="settings-panel" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 2h4.6l.6 2.4 1.2.7 2.4-.7 2.3 4-1.8 1.7v1.8l1.8 1.7-2.3 4-2.4-.7-1.2.7-.6 2.4H9.7l-.6-2.4-1.2-.7-2.4.7-2.3-4L5 11.9v-1.8L3.2 8.4l2.3-4 2.4.7 1.2-.7.6-2.4Z"></path><circle cx="12" cy="11" r="3"></circle></svg>
   </button>
 </header>
