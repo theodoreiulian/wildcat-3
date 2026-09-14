@@ -35,11 +35,9 @@
         </dl>
         <p id="result" class="engine-state idle"><i aria-hidden="true"></i><span>STOPPED</span></p>
       </div>
-      <p id="mode-help" class="hint engine-help">Real prices, simulated funds.</p>
       <div id="live-confirmation" class="live-confirmation" hidden>
         <p class="caution">Live mode submits real orders. Profit and stop fills are never guaranteed.</p>
         <label class="check" for="confirm-live"><input id="confirm-live" type="checkbox"><span>I understand and want to use real funds.</span></label>
-        <p id="check-help" class="hint">Check the dedicated account before starting.</p>
       </div>
     </section>
 
@@ -47,7 +45,6 @@
       <div>
         <p class="kicker"><span id="mode-tag">—</span> PORTFOLIO <span id="snapshot-label">NO SNAPSHOT</span></p>
         <h1 id="portfolio-title"><span id="equity">—</span></h1>
-        <p id="health" class="health">Waiting for your first account snapshot.</p>
       </div>
       <dl class="headline-stats">
         <div><dt>AVAILABLE</dt><dd id="available">—</dd></div>
@@ -63,7 +60,6 @@
           <thead><tr><th>ASSET</th><th class="num">PRICE</th><th class="num">24H</th><th class="num">HOLDING</th><th class="num">VALUE</th></tr></thead>
           <tbody id="portfolio-rows"></tbody>
         </table></div>
-        <p class="portfolio-note">Values use fresh Kraken order books and estimated liquidation after fees and slippage.</p>
       </section>
 
       <section class="chart-panel" aria-labelledby="chart-title">

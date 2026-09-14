@@ -63,7 +63,6 @@ function controls() {
   $("mode").disabled = locked; $("confirm-live").disabled = locked;
   const live = $("mode").value === "live";
   $("live-confirmation").hidden = !live;
-  $("mode-help").textContent = live ? "Real Kraken funds and protective orders." : "Real prices, simulated funds.";
   $("start").textContent = live ? "Start live" : "Start paper";
   $("start").disabled = locked || (live && (!current?.live_ready || !$("confirm-live").checked));
   $("check-account").disabled = locked || !current?.configured.KRAKEN_API_KEY;
@@ -173,12 +172,11 @@ function render(state) {
   current = state; disconnected = false;
   if (state.busy && state.operation === "run") $("mode").value = state.mode;
   const view = state.view || {}, running = state.busy && state.operation === "run", status = String(view.status || (state.busy ? "STARTING" : "OFFLINE"));
-  put("connection", running ? "MARKET DATA LIVE" : "CONTROLLER ONLINE"); $("connection").className = "connection" + (running ? " live" : "");
+  put("connection", running ? "MARKET DATA LIVE" : "BACKEND ONLINE"); $("connection").className = "connection" + (running ? " live" : "");
   put("mode-tag", state.mode.toUpperCase());
   put("equity", money(view.equity)); put("available", money(view.available)); put("unrealized", signedMoney(view.unrealized), signClass(view.unrealized)); put("realized", signedMoney(view.realized), signClass(view.realized));
   const age = view.updated ? Math.max(0, state.now - view.updated) : null;
   put("snapshot-label", age === null ? "NO SNAPSHOT" : `${duration(age)} AGO${!running || age > 60 ? " · STALE" : ""}`, age !== null && (!running || age > 60) ? "warn" : "");
-  put("health", view.health || "Waiting for your first account snapshot.", STATE_CLASS[status] === "down" ? "down" : "");
   put("runtime-status", state.busy ? (state.stopping ? "STOPPING" : state.operation.toUpperCase()) : "STOPPED", state.busy ? "up" : "off");
   put("uptime", state.busy ? duration(view.uptime) : "—"); put("recon", view.last_reconciled ? `${duration(state.now - view.last_reconciled)} AGO` : "NEVER");
   put("dd-val", view.drawdown == null ? "—" : `${Number(view.drawdown).toFixed(2)}%`, Number(view.drawdown) >= 8 ? "down" : Number(view.drawdown) >= 6 ? "warn" : "");
@@ -195,7 +193,7 @@ function render(state) {
 }
 async function refresh() {
   try { render(await api("/api/state")); }
-  catch (error) { disconnected = true; $("connection").className = "connection bad"; $("connection").textContent = "CONTROLLER OFFLINE"; engineState("ERROR", "down"); notice(`${error.message} Keep the launcher open and reconnect before operating the engine.`, true); controls(); }
+  catch (error) { disconnected = true; $("connection").className = "connection bad"; $("connection").textContent = "BACKEND OFFLINE"; engineState("ERROR", "down"); notice(`${error.message} Keep the launcher open and reconnect before operating the engine.`, true); controls(); }
 }
 async function act(path, body, success) {
   if (pending) return; pending = true; controls();
