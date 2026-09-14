@@ -1,30 +1,131 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WildCat-3 · Control room</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WildCat-3 · Portfolio</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script>
+</head>
 <body>
-<header><a class="brand" href="/" aria-label="WildCat-3 home">W<span class="brand-mark">/</span>C<span class="brand-num">03</span></a><span class="header-label">DECENTRALIZED AI · EUR SPOT</span><span id="connection" class="badge">Connecting…</span></header>
-<main id="top">
-<div class="intro"><div><p class="eyebrow">YOUR LOCAL CONTROL ROOM</p><h1>A clear view.<br>A deliberate trade.</h1><p class="lede">Connect Kraken, set up your alerts, and keep an eye on WildCat-3. Everything starts here.</p></div><aside class="mandate"><span>THE MANDATE</span><p>€200 starting balance.<br>Four compute markets.<br>Spot trading only.</p><small>TAO / RENDER / AKT / FET</small></aside></div>
-<p id="feedback" role="status" aria-live="polite" hidden></p>
-<div class="workspace">
-<div class="setup">
-<section aria-labelledby="kraken-title"><div class="section-head"><span class="step">01</span><h2 id="kraken-title">Connect your Kraken account</h2><span id="kraken-saved" class="small-status">Not connected</span></div>
-<p>You sign in on Kraken. WildCat-3 uses an API key to access the account—never your password.</p>
-<details><summary>Where do I get my API keys?</summary><div class="instructions"><ol><li>Open <a href="https://pro.kraken.com/app/settings/api" target="_blank" rel="noreferrer">Kraken Pro API settings ↗</a>, sign in, and create a <strong>Spot API key</strong> named WildCat-3.</li><li>Enable <strong>Query Funds</strong>, <strong>Query Open Orders &amp; Trades</strong>, <strong>Query Closed Orders &amp; Trades</strong>, <strong>Modify Orders</strong>, and <strong>Cancel/Close Orders</strong>.</li><li>Leave withdrawals, deposits and transfers disabled. Use this key only for this bot.</li><li>Copy the API key and private key into the fields below.</li></ol><p>Before your first live run, the dedicated account must hold exactly €200 EUR, no other assets or open orders, and no borrowing or automatic Earn transfers.</p><a href="https://support.kraken.com/articles/how-to-create-an-api-key-on-kraken-pro" target="_blank" rel="noreferrer">Kraken’s official setup guide ↗</a></div></details>
-<form id="kraken-form"><label for="api-key">API key</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" maxlength="4096" placeholder="Paste your Kraken API key"><label for="api-secret">Private key / API secret</label><input id="api-secret" type="password" autocomplete="new-password" spellcheck="false" maxlength="4096" placeholder="Paste your Kraken private key"><p class="hint">Saved keys stay hidden. Enter both fields to replace them.</p><div class="actions"><button type="submit">Save Kraken keys</button><button type="button" id="check-account" class="secondary">Check account</button><button type="button" id="remove-kraken" class="text-button">Remove keys</button></div></form>
-<p class="privacy">Stored in this project’s private local settings file, readable by your Mac user. Not encrypted. Never sent back to this page or stored in browser storage.</p>
-</section>
-<section aria-labelledby="telegram-title"><div class="section-head"><span class="step">02</span><h2 id="telegram-title">Get alerts on your phone</h2><span class="small-status">Optional</span></div>
-<p>Receive trade executions, startup summaries and critical alerts through Telegram.</p>
-<details><summary>Set up Telegram notifications</summary><div class="instructions"><ol><li>Open <a href="https://t.me/BotFather" target="_blank" rel="noreferrer">@BotFather ↗</a> in Telegram and send <code>/newbot</code>. Copy the token it gives you.</li><li>Open your new bot’s chat and send <code>/start</code>.</li><li>Paste the bot token below and click Find my chat. Select your chat, then save the settings.</li></ol><p>Notifications begin when you start the bot. While this computer is off, use Kraken’s own execution notifications; local alerts resume at startup.</p></div></details>
-<form id="telegram-form"><label for="telegram-token">Bot token</label><input id="telegram-token" type="password" autocomplete="new-password" spellcheck="false" placeholder="Paste your bot token"><button type="button" id="find-chat" class="text-button">Find my chat</button><div id="chat-picker" hidden><label for="chat-choice">Choose your Telegram chat</label><select id="chat-choice"></select></div><label for="telegram-chat">Chat ID</label><input id="telegram-chat" type="text" autocomplete="off" spellcheck="false" placeholder="Your numeric chat ID"><div class="actions"><button type="submit" class="secondary">Save Telegram settings</button><button type="button" id="remove-telegram" class="text-button">Remove</button></div><p id="telegram-saved" class="hint">Notifications are not configured.</p></form>
-</section>
-</div>
-<aside class="control" aria-labelledby="control-title"><p class="eyebrow">03 / RUN THE BOT</p><h2 id="control-title">Choose your next move.</h2><label for="mode">Trading mode</label><select id="mode"><option value="paper">Paper · simulated €200</option><option value="live">Live · real Kraken funds</option></select><p id="mode-help">Uses real market prices with simulated money. No Kraken keys needed.</p>
-<div id="live-confirmation" hidden><p class="caution">Live mode can submit real buy and sell orders. Profitability and stop fills are not guaranteed; live execution has not been validated.</p><label class="check"><input id="confirm-live" type="checkbox"><span>I understand and want to trade real money on this dedicated account.</span></label><p id="check-help" class="hint">Save your keys and check the account first. A successful check verifies authentication and reconciliation, not trading permissions or stop execution.</p></div>
-<button id="start" class="start-button" disabled>Start paper trading</button><button id="stop" class="secondary full" disabled>Stop bot safely</button><button id="doctor" class="text-button full">Check public Kraken connection</button><div class="runtime"><span id="runtime-status" class="badge">Stopped</span><p id="result">Loading local settings…</p></div><p class="hint">Keep the launcher’s Terminal window open. Closing this browser tab does not stop the bot. Stop here before closing the launcher.</p></aside>
-</div>
-<section class="monitor" aria-labelledby="monitor-title"><div class="section-head"><h2 id="monitor-title">Portfolio &amp; activity</h2><span id="snapshot-label" class="small-status">No saved activity yet</span></div><div class="metrics"><div><span>Equity</span><strong id="equity">—</strong></div><div><span>Available EUR</span><strong id="available">—</strong></div><div><span>Realized / unrealized</span><strong id="pnl">—</strong></div><div><span>Closed wins / losses</span><strong id="wins">—</strong></div></div><p id="health" class="hint">Start paper mode to see your first account snapshot.</p><div class="tables"><div><h3>Positions</h3><div class="table-scroll"><table><thead><tr><th>Pair</th><th>Quantity</th><th>Unrealized</th></tr></thead><tbody id="positions"></tbody></table></div></div><div><h3>Working orders</h3><div class="table-scroll"><table><thead><tr><th>Pair</th><th>Order</th><th>Coverage</th></tr></thead><tbody id="orders"></tbody></table></div></div></div><div class="tables"><div><h3>Candidate decisions</h3><ul id="reasons" class="activity"></ul></div><div><h3>Recent events</h3><ul id="events" class="activity"></ul></div></div><details id="operation-details"><summary>Connection check &amp; operation details</summary><pre id="logs">No operation output yet.</pre></details></section>
-<footer><span>WILDCAT-3 / LOCAL EDITION</span><span>Paper stops only operate while the bot runs. Live protective orders remain on Kraken after stopping.</span></footer>
+<header class="topbar">
+  <a class="brand" href="/" aria-label="WildCat-3 portfolio"><span>WILDCAT</span><b>3</b></a>
+  <nav class="workspace-tabs" aria-label="Workspace view">
+    <button id="view-portfolio" type="button" aria-controls="portfolio-view" aria-pressed="true">Portfolio</button>
+    <button id="view-activity" type="button" aria-controls="activity-view" aria-pressed="false">Activity</button>
+  </nav>
+  <span id="connection" class="connection">CONNECTING</span>
+  <time id="clock-time">--:--:-- UTC</time>
+  <button id="settings-button" class="settings-button" type="button" aria-label="Open connections and alerts" aria-controls="settings-panel" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 2h4.6l.6 2.4 1.2.7 2.4-.7 2.3 4-1.8 1.7v1.8l1.8 1.7-2.3 4-2.4-.7-1.2.7-.6 2.4H9.7l-.6-2.4-1.2-.7-2.4.7-2.3-4L5 11.9v-1.8L3.2 8.4l2.3-4 2.4.7 1.2-.7.6-2.4Z"></path><circle cx="12" cy="11" r="3"></circle></svg>
+  </button>
+</header>
+<p id="feedback" role="status" aria-live="polite" class="feedback" hidden></p>
+
+<main>
+  <section id="portfolio-view" class="portfolio" aria-labelledby="portfolio-title">
+    <section class="engine-panel" aria-labelledby="control-title">
+      <div class="section-title"><h2 id="control-title">Engine</h2></div>
+      <div class="engine-row">
+        <div class="engine-mode"><label for="mode">MODE</label><select id="mode"><option value="paper">Paper · simulated €200</option><option value="live">Live · real Kraken funds</option></select></div>
+        <div class="actions engine-actions"><button id="start" class="primary" disabled>Start paper</button><button id="stop" disabled>Stop safely</button></div>
+        <dl class="engine-meta">
+          <div><dt>PROCESS</dt><dd id="runtime-status">STOPPED</dd></div>
+          <div><dt>UPTIME</dt><dd id="uptime">—</dd></div>
+          <div><dt>RECONCILED</dt><dd id="recon">NEVER</dd></div>
+          <div><dt>DRAWDOWN</dt><dd id="dd-val">—</dd></div>
+        </dl>
+        <p id="result" class="engine-state idle"><i aria-hidden="true"></i><span>STOPPED</span></p>
+      </div>
+      <div id="live-confirmation" class="live-confirmation" hidden>
+        <p class="caution">Live mode submits real orders. Profit and stop fills are never guaranteed.</p>
+        <label class="check" for="confirm-live"><input id="confirm-live" type="checkbox"><span>I understand and want to use real funds.</span></label>
+      </div>
+    </section>
+
+    <header class="portfolio-head">
+      <div>
+        <p class="kicker"><span id="mode-tag">—</span> PORTFOLIO <span id="snapshot-label">NO SNAPSHOT</span></p>
+        <h1 id="portfolio-title"><span id="equity">—</span></h1>
+      </div>
+      <dl class="headline-stats">
+        <div><dt>AVAILABLE</dt><dd id="available">—</dd></div>
+        <div><dt>UNREALIZED</dt><dd id="unrealized">—</dd></div>
+        <div><dt>REALIZED</dt><dd id="realized">—</dd></div>
+      </dl>
+    </header>
+
+    <div class="portfolio-grid">
+      <section class="holdings" aria-labelledby="holdings-title">
+        <div class="section-title"><h2 id="holdings-title">Your holdings</h2><span id="pos-count">0 assets</span></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>ASSET</th><th class="num">PRICE</th><th class="num">24H</th><th class="num">HOLDING</th><th class="num">VALUE</th></tr></thead>
+          <tbody id="portfolio-rows"></tbody>
+        </table></div>
+      </section>
+
+      <section class="chart-panel" aria-labelledby="chart-title">
+        <header class="chart-head">
+          <div><p id="chart-caption">TOTAL PORTFOLIO</p><h2 id="chart-title">Equity history</h2></div>
+          <div class="chart-quote"><strong id="chart-price">—</strong><span id="chart-change">—</span></div>
+        </header>
+        <div class="chart-wrap">
+          <svg id="price-chart" viewBox="0 0 900 360" preserveAspectRatio="none" role="img" aria-label="Portfolio price history">
+            <line x1="0" y1="90" x2="900" y2="90"></line><line x1="0" y1="180" x2="900" y2="180"></line><line x1="0" y1="270" x2="900" y2="270"></line>
+            <path id="chart-area" class="area" d=""></path><path id="chart-line" class="line" d=""></path>
+          </svg>
+          <p id="chart-empty" class="chart-empty">Price history appears once the engine has market data.</p>
+        </div>
+        <div class="chart-axis"><span id="chart-start">—</span><span id="chart-low">LOW —</span><span id="chart-high">HIGH —</span><span id="chart-end">—</span></div>
+      </section>
+    </div>
+
+    <section class="protection-panel" aria-labelledby="orders-title">
+      <div class="section-title"><h2 id="orders-title">Protection</h2><span id="ord-count">0 orders</span></div>
+      <ul id="orders" class="orders"></ul>
+    </section>
+  </section>
+
+  <section id="activity-view" class="activity-screen" aria-labelledby="activity-title" hidden>
+    <div class="section-title"><h1 id="activity-title">Activity</h1><span>STRUCTURED BOT EVENTS</span></div>
+    <div class="activity-stream"><p>EVENTS</p><ul id="events" class="events"></ul></div>
+  </section>
+
+  <aside class="sidebar">
+    <section class="log-panel" aria-label="Live process log">
+      <pre id="logs" tabindex="0" aria-label="Live process log">No operation output yet.</pre>
+    </section>
+
+  </aside>
+
+  <section class="settings-panel" id="settings-panel" aria-labelledby="settings-title" hidden>
+      <header class="settings-head"><div><h2 id="settings-title">SYSTEM SETTINGS</h2><span id="setup-summary">NOT CONFIGURED</span></div><button id="settings-close" type="button" aria-label="Close settings">CLOSE ×</button></header>
+      <div class="settings-grid">
+        <section id="cfg-kraken">
+          <div class="section-title"><h2>Kraken account</h2><span id="kraken-saved">NO KEYS</span></div>
+          <p class="hint">Keys stay in this project's private local settings and are never returned to this page.</p>
+          <form id="kraken-form">
+            <label for="api-key">API KEY</label><input id="api-key" type="password" autocomplete="off" spellcheck="false" maxlength="4096" placeholder="Kraken API key">
+            <label for="api-secret">PRIVATE KEY</label><input id="api-secret" type="password" autocomplete="new-password" spellcheck="false" maxlength="4096" placeholder="Kraken private key">
+            <div class="actions"><button type="submit" class="primary">Save keys</button><button type="button" id="check-account">Check account</button><button type="button" id="doctor">Test Kraken</button><button type="button" id="remove-kraken" class="text-button">Remove</button></div>
+          </form>
+          <details class="nested"><summary>API key instructions</summary><ol>
+            <li>Create a Spot API key in <a href="https://pro.kraken.com/app/settings/api" target="_blank" rel="noreferrer">Kraken Pro ↗</a>.</li>
+            <li>Enable fund, order and trade queries; order modification and cancellation.</li>
+            <li>Keep withdrawals, deposits and transfers disabled.</li>
+            <li>The dedicated account must begin with exactly €200 and no other assets or orders.</li>
+          </ol></details>
+        </section>
+        <section id="cfg-telegram">
+          <div class="section-title"><h2>Telegram alerts</h2><span id="telegram-saved">OFF</span></div>
+          <p class="hint">Optional alerts for executions, startup and critical events.</p>
+          <form id="telegram-form">
+            <label for="telegram-token">BOT TOKEN</label><input id="telegram-token" type="password" autocomplete="new-password" spellcheck="false" placeholder="BotFather token">
+            <div id="chat-picker" hidden><label for="chat-choice">DETECTED CHAT</label><select id="chat-choice"></select></div>
+            <label for="telegram-chat">CHAT ID</label><input id="telegram-chat" type="text" autocomplete="off" spellcheck="false" placeholder="Numeric chat ID">
+            <div class="actions"><button type="button" id="find-chat">Find chat</button><button type="submit" class="primary">Save alerts</button><button type="button" id="remove-telegram" class="text-button">Remove</button></div>
+          </form>
+        </section>
+      </div>
+  </section>
 </main>
-</body></html>
+</body>
+</html>

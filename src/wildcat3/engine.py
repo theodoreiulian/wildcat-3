@@ -409,10 +409,16 @@ class Engine:
             taker = self.fee_map[s][1]
             liquidation = p.quantity * b.bid * (1 - taker - self.config.slippage_bps / 10000)
             equity += liquidation
+            candles = self.candle_cache.get(s, [])
+            day_open = candles[-25].close if len(candles) >= 25 else candles[0].close if candles else None
+            change = (float(b.mid) / day_open - 1) * 100 if day_open else None
             positions.append({"symbol": s, "quantity": str(p.quantity), "average": str(p.avg_price),
-                              "value": str(liquidation), "pnl": str(liquidation - p.cost_eur)})
+                              "price": str(b.mid), "value": str(liquidation),
+                              "pnl": str(liquidation - p.cost_eur), "change_24h": change})
         self.view.update(equity=str(equity), positions=positions,
-                         unrealized=str(sum((D(p["pnl"]) for p in positions), D(0))))
+                         unrealized=str(sum((D(p["pnl"]) for p in positions), D(0))),
+                         price_history={s: [[c.time, c.close] for c in self.candle_cache.get(s, [])[-168:]]
+                                        for s in self.account.positions})
         peak = max(equity, D(self.store.get("high_water", "200")))
         self.store.set("high_water", str(peak))
         now = time.time()
@@ -424,6 +430,7 @@ class Engine:
         day_start = D(self.store.get("day_start", "200"))
         self.store.set("last_equity", str(equity))
         self.store.add_equity(equity)
+        self.view["equity_history"] = self.store.equity_history(240)
         drawdown = 1 - equity / peak if peak else D(0)
         self.view["drawdown"] = str(drawdown * 100)
         if equity <= D("200") * (1 - self.config.drawdown_fraction) or drawdown >= self.config.drawdown_fraction:

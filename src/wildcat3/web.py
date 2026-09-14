@@ -311,9 +311,11 @@ class Handler(BaseHTTPRequestHandler):
             except (ValueError, OSError):
                 self.respond(500, {"error": "Cannot read local settings. Check file permissions."})
             return
-        name = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css"}.get(self.path)
+        name = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css",
+                "/favicon.svg": "favicon.svg"}.get(self.path)
         if name:
-            mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css"}[name]
+            mime = {"index.html": "text/html", "app.js": "text/javascript", "style.css": "text/css",
+                    "favicon.svg": "image/svg+xml"}[name]
             self.respond(200, files("wildcat3").joinpath("static", name).read_bytes(), mime)
         else:
             self.respond(404, {"error": "Not found."})

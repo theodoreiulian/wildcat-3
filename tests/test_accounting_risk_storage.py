@@ -69,6 +69,17 @@ def test_store_lock_and_nonce_survive_restart(tmp_path):
     b.close()
 
 
+def test_equity_history_can_be_bounded(tmp_path):
+    store = Store(tmp_path / "equity.sqlite3")
+    try:
+        for index in range(5):
+            store.add_equity(D(200 + index), now=index + 1)
+        assert store.equity_history(3) == [(3, 202.0), (4, 203.0), (5, 204.0)]
+        assert len(store.equity_history()) == 5
+    finally:
+        store.close()
+
+
 def test_fill_and_outbox_are_idempotent_and_transactional(tmp_path):
     store = Store(tmp_path / "db")
     try:
