@@ -1,5 +1,8 @@
 # WildCat-3
 
+> [!WARNING]
+> **This project is discontinued and unfinished.** It is no longer maintained and will not receive further development. WildCat-3 does not implement any proven, profitable trading strategy: none of its logic has been shown to generate returns, and running it, whether in paper or live mode, should not be expected to make money. The code is kept for reference only. Do not trade real funds with it.
+
 A local Python trading agent specialized in Kraken EUR spot markets for decentralized AI and compute: **TAO, RENDER, AKT and FET**. BTC/EUR is a market-regime input only. The initial bankroll is exactly **€200**. No margin, borrowing, derivatives, conversion orders or general market scanner.
 
 The default mode is paper trading against real public Kraken data. Live trading requires your own Kraken credentials and explicit configuration. This repository does not establish a profitable edge or guarantee that an exchange stop executes. Do not describe an indicator backtest or this implementation as validated production performance.
